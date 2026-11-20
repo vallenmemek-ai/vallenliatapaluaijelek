@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VALLEN — Admin Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090a; --panel:#0f1011; --surface:#161719; --surface2:#1d1e21;
+  --ink:#f7f8f8; --ink2:#d0d6e0; --muted:#8a8f98; --faint:#62666d;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+  --pink:#ff2d87; --pink-hi:#ff6eaf; --pink-dim:rgba(255,45,135,.14);
+  --green:#2dd4a7; --green-dim:rgba(45,212,167,.13);
+  --amber:#f5a623; --amber-dim:rgba(245,166,35,.13);
+  --red:#ff5c5c; --red-dim:rgba(255,92,92,.13);
+  --r:8px; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif; font-feature-settings:"cv01","ss03";
+  background:var(--bg); color:var(--ink); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+::selection{background:var(--pink-dim)}
+
+/* ---------- LOGIN ---------- */
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(1200px 600px at 50% -10%,rgba(255,45,135,.07),transparent 60%),var(--bg);}
+.login-card{width:380px;max-width:calc(100vw - 40px);background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:36px 32px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:28px}
+.brand .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--pink),#c9186a);
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#fff;letter-spacing:-.5px}
+.brand .name{font-weight:600;font-size:17px;letter-spacing:-.3px}
+.brand .sub{font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.login-card h1{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-bottom:6px}
+.login-card p.hint{color:var(--muted);font-size:13px;margin-bottom:24px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:7px}
+.field input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--line2);
+  border-radius:7px;padding:11px 13px;color:var(--ink);font-size:14px;outline:none;transition:.15s}
+.field input:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink-dim)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;
+  border-radius:7px;padding:10px 16px;font-size:13px;font-weight:500;transition:.15s}
+.btn-pink{background:var(--pink);color:#fff;width:100%;padding:12px}
+.btn-pink:hover{background:var(--pink-hi)}
+.btn-ghost{background:rgba(255,255,255,.03);color:var(--ink2);border:1px solid var(--line2)}
+.btn-ghost:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+.login-foot{margin-top:22px;text-align:center;font-size:11px;color:var(--faint)}
+.err{color:var(--red);font-size:12px;margin-top:10px;display:none}
+
+/* ---------- APP SHELL ---------- */
+#app{display:none;height:100vh;grid-template-columns:236px 1fr}
+#app.on{display:grid}
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 14px}
+.side .brand{margin-bottom:26px;padding:0 6px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:7px;
+  color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:.13s}
+.nav a svg{width:16px;height:16px;flex:none}
+.nav a:hover{background:rgba(255,255,255,.04);color:var(--ink2)}
+.nav a.active{background:var(--pink-dim);color:var(--pink-hi)}
+.nav .spacer{flex:1}
+.side-foot{border-top:1px solid var(--line);padding-top:14px;margin-top:14px;display:flex;align-items:center;gap:10px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#c9186a);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff}
+.side-foot .who{font-size:12px;font-weight:500}
+.side-foot .role{font-size:11px;color:var(--faint)}
+
+.main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:60px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+  justify-content:space-between;padding:0 28px;flex:none}
+.topbar .crumb{font-size:13px;color:var(--muted)}
+.topbar .crumb b{color:var(--ink);font-weight:600}
+.topbar .right{display:flex;align-items:center;gap:14px}
+.search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);
+  border:1px solid var(--line);border-radius:7px;padding:7px 12px;width:240px}
+.search input{background:none;border:none;outline:none;color:var(--ink);font-size:13px;width:100%}
+.search svg{width:14px;height:14px;color:var(--faint)}
+.content{flex:1;overflow-y:auto;padding:28px}
+
+/* ---------- KEYS PAGE ---------- */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+.page-head h2{font-size:22px;font-weight:600;letter-spacing:-.5px}
+.page-head .desc{color:var(--muted);font-size:13px;margin-top:3px}
+.metrics{display:flex;gap:26px;margin-bottom:22px}
+.metric{display:flex;flex-direction:column;gap:2px}
+.metric .v{font-size:20px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+.metric .l{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}
+.metric .v.green{color:var(--green)} .metric .v.amber{color:var(--amber)} .metric .v.red{color:var(--red)}
+
+.filters{display:flex;gap:8px;margin-bottom:16px}
+.pill{background:transparent;border:1px solid var(--line2);color:var(--muted);
+  border-radius:999px;padding:5px 14px;font-size:12px;font-weight:500;transition:.13s}
+.pill:hover{color:var(--ink2)}
+.pill.active{background:var(--pink-dim);border-color:transparent;color:var(--pink-hi)}
+
+.table-wrap{border:1px solid var(--line);border-radius:12px;overflow-x:auto;background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.key{white-space:nowrap}
+tbody td:nth-child(5){white-space:nowrap}
+thead th{text-align:left;font-size:11px;font-weight:500;color:var(--faint);text-transform:uppercase;
+  letter-spacing:.5px;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.key{font-family:var(--mono);font-size:12px;color:var(--ink);letter-spacing:-.2px}
+.lbl{font-weight:500;color:var(--ink)}
+.dev{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;
+  padding:3px 10px;border-radius:999px}
+.badge .dot{width:6px;height:6px;border-radius:50%}
+.badge.active{background:var(--green-dim);color:var(--green)} .badge.active .dot{background:var(--green)}
+.badge.expired{background:var(--amber-dim);color:var(--amber)} .badge.expired .dot{background:var(--amber)}
+.badge.revoked{background:var(--red-dim);color:var(--red)} .badge.revoked .dot{background:var(--red)}
+.row-act{display:flex;gap:6px;justify-content:flex-end}
+.icon-btn{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.03);
+  border:1px solid var(--line);color:var(--muted);display:flex;align-items:center;justify-content:center;transition:.13s}
+.icon-btn:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+.icon-btn.danger:hover{color:var(--red);border-color:var(--red-dim);background:var(--red-dim)}
+.icon-btn svg{width:14px;height:14px}
+.empty{padding:48px;text-align:center;color:var(--faint);font-size:13px}
+
+/* ---------- MODAL ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;z-index:50}
+.overlay.on{display:flex}
+.modal{width:460px;max-width:calc(100vw - 40px);background:var(--surface);border:1px solid var(--line2);
+  border-radius:14px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal h3{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}
+.modal .msub{color:var(--muted);font-size:13px;margin-bottom:22px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line2);color:var(--muted);
+  border-radius:7px;padding:10px;font-size:13px;font-weight:500;transition:.13s}
+.seg button.active{background:var(--pink-dim);border-color:var(--pink);color:var(--pink-hi)}
+.modal-actions{display:flex;gap:10px;margin-top:24px}
+.modal-actions .btn{flex:1}
+.key-result{margin-top:20px;background:var(--bg);border:1px solid var(--pink);border-radius:10px;padding:16px;display:none}
+.key-result.on{display:block}
+.key-result .kr-label{font-size:11px;color:var(--pink-hi);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
+.key-result .kr-row{display:flex;align-items:center;gap:10px}
+.key-result .kr-key{font-family:var(--mono);font-size:15px;color:var(--ink);flex:1;word-break:break-all}
+.key-result .kr-warn{font-size:11px;color:var(--amber);margin-top:11px}
+.copy-btn{background:var(--pink);color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:500}
+.copy-btn:hover{background:var(--pink-hi)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--line2);color:var(--ink);padding:11px 18px;
+  border-radius:9px;font-size:13px;opacity:0;transition:.25s;z-index:99;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:820px){#app.on{grid-template-columns:1fr}.side{display:none}.search{display:none}.metrics{gap:18px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="brand">
+      <div class="mark">V</div>
+      <div><div class="name">VALLEN</div><div class="sub">Admin Console</div></div>
+    </div>
+    <h1>Masuk</h1>
+    <p class="hint">Kelola license key mod VALLEN.</p>
+    <div class="field">
+      <label>Password admin</label>
+      <input type="password" id="pw" placeholder="••••••••" autocomplete="off">
+    </div>
+    <button class="btn btn-pink" onclick="doLogin()">Masuk</button>
+    <div class="err" id="loginErr">Password salah.</div>
+    <div class="login-foot">VALLEN GANTENG · v2.0 · by vallenganteng</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark">V</div>
+      <div><div class="name">VALLEN</div><div class="sub">Admin</div></div>
+    </div>
+    <nav class="nav">
+      <a class="active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>License Keys</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>Devices</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Activity</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="side-foot">
+      <div class="avatar">VG</div>
+      <div><div class="who">vallenganteng</div><div class="role">Administrator</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb">Console / <b>License Keys</b></div>
+      <div class="right">
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="Cari key / label…" id="search" oninput="render()"></div>
+        <button class="btn btn-pink" style="width:auto" onclick="openGen()">+ Generate Key</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-head">
+        <div><h2>License Keys</h2><div class="desc">Generate, bind device, dan revoke key mod VALLEN.</div></div>
+      </div>
+      <div class="metrics" id="metrics"></div>
+      <div class="filters" id="filters">
+        <button class="pill active" data-f="all" onclick="setFilter('all')">Semua</button>
+        <button class="pill" data-f="active" onclick="setFilter('active')">Active</button>
+        <button class="pill" data-f="expired" onclick="setFilter('expired')">Expired</button>
+        <button class="pill" data-f="revoked" onclick="setFilter('revoked')">Revoked</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Key</th><th>Label</th><th>Device</th><th>Durasi</th><th>Expired</th><th>Status</th><th style="text-align:right">Aksi</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="empty" style="display:none">Belum ada key. Klik <b>Generate Key</b> buat bikin.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GENERATE MODAL -->
+<div class="overlay" id="genOverlay">
+  <div class="modal">
+    <h3>Generate Key Baru</h3>
+    <div class="msub">Key di-bind ke 1 device pas validasi pertama.</div>
+    <div class="field">
+      <label>Label / nama pembeli</label>
+      <input type="text" id="genLabel" placeholder="mis. Budi — FF ID 12345">
+    </div>
+    <div class="field">
+      <label>Durasi</label>
+      <div class="seg" id="durSeg">
+        <button data-d="1" onclick="setDur(1)">1 hari</button>
+        <button data-d="7" class="active" onclick="setDur(7)">7 hari</button>
+        <button data-d="30" onclick="setDur(30)">30 hari</button>
+      </div>
+    </div>
+    <div class="key-result" id="keyResult">
+      <div class="kr-label">Key baru — salin sekarang</div>
+      <div class="kr-row"><div class="kr-key" id="krKey"></div><button class="copy-btn" onclick="copyKey()">Copy</button></div>
+      <div class="kr-warn">⚠ Key cuma tampil sekali. Habis ini cuma hash yang disimpan.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeGen()">Tutup</button>
+      <button class="btn btn-pink" style="width:auto" id="genBtn" onclick="genKey()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEMO_PW="vallen123";
+let keys=JSON.parse(localStorage.getItem('vallen_keys')||'null')||[
+  {key:'VALLEN-7K2M-9XQ4-P1AB',label:'Budi — FF 12345',device:'a1b2c3d4e5f6',days:30,exp:Date.now()+26*864e5,status:'active'},
+  {key:'VALLEN-3F8N-2LM7-Q9ZX',label:'Siti — FF 67890',device:'f6e5d4c3b2a1',days:7,exp:Date.now()+3*864e5,status:'active'},
+  {key:'VALLEN-9P1Q-5RT8-W2YZ',label:'Test trial',device:'—',days:1,exp:Date.now()-2*864e5,status:'expired'},
+  {key:'VALLEN-4H6J-8KL0-M3NB',label:'Reseller A',device:'112233445566',days:30,exp:Date.now()+20*864e5,status:'revoked'},
+];
+let filter='all',dur=7,lastKey='';
+function save(){localStorage.setItem('vallen_keys',JSON.stringify(keys))}
+function statusOf(k){if(k.status==='revoked')return'revoked';if(k.exp<Date.now())return'expired';return'active'}
+function fmtDate(t){return new Date(t).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+
+function doLogin(){
+  const pw=document.getElementById('pw').value;
+  if(pw===DEMO_PW){document.getElementById('login').style.display='none';document.getElementById('app').classList.add('on');render();}
+  else document.getElementById('loginErr').style.display='block';
+}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+function setFilter(f){filter=f;document.querySelectorAll('#filters .pill').forEach(p=>p.classList.toggle('active',p.dataset.f===f));render()}
+function render(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const list=keys.filter(k=>{const s=statusOf(k);return(filter==='all'||s===filter)&&(k.key.toLowerCase().includes(q)||k.label.toLowerCase().includes(q))});
+  const c={active:0,expired:0,revoked:0};keys.forEach(k=>c[statusOf(k)]++);
+  document.getElementById('metrics').innerHTML=
+    `<div class="metric"><div class="v green">${c.active}</div><div class="l">Active</div></div>`+
+    `<div class="metric"><div class="v amber">${c.expired}</div><div class="l">Expired</div></div>`+
+    `<div class="metric"><div class="v red">${c.revoked}</div><div class="l">Revoked</div></div>`+
+    `<div class="metric"><div class="v">${keys.length}</div><div class="l">Total</div></div>`;
+  const tb=document.getElementById('rows');
+  tb.innerHTML=list.map((k,i)=>{const s=statusOf(k);const idx=keys.indexOf(k);
+    return `<tr><td><span class="key">${k.key}</span></td><td><span class="lbl">${k.label}</span></td>
+    <td><span class="dev">${k.device}</span></td><td>${k.days} hari</td><td>${fmtDate(k.exp)}</td>
+    <td><span class="badge ${s}"><span class="dot"></span>${s}</span></td>
+    <td><div class="row-act">
+      <button class="icon-btn" title="Copy key" onclick="copyTxt('${k.key}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+      ${s!=='revoked'?`<button class="icon-btn danger" title="Revoke" onclick="revoke(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></svg></button>`:''}
+    </div></td></tr>`}).join('');
+  document.getElementById('empty').style.display=list.length?'none':'block';
+}
+function revoke(i){keys[i].status='revoked';save();render();toast('Key di-revoke')}
+function copyTxt(t){navigator.clipboard?.writeText(t);toast('Key disalin')}
+
+function openGen(){document.getElementById('genOverlay').classList.add('on');document.getElementById('keyResult').classList.remove('on');document.getElementById('genLabel').value='';document.getElementById('genBtn').style.display=''}
+function closeGen(){document.getElementById('genOverlay').classList.remove('on')}
+function setDur(d){dur=d;document.querySelectorAll('#durSeg button').forEach(b=>b.classList.toggle('active',+b.dataset.d===d))}
+function rnd(n){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+function genKey(){
+  const label=document.getElementById('genLabel').value.trim()||'Tanpa label';
+  lastKey=`VALLEN-${rnd(4)}-${rnd(4)}-${rnd(4)}`;
+  keys.unshift({key:lastKey,label,device:'—',days:dur,exp:Date.now()+dur*864e5,status:'active'});
+  save();render();
+  document.getElementById('krKey').textContent=lastKey;
+  document.getElementById('keyResult').classList.add('on');
+  document.getElementById('genBtn').style.display='none';
+}
+function copyKey(){copyTxt(lastKey)}
+document.getElementById('genOverlay').addEventListener('click',e=>{if(e.target.id==='genOverlay')closeGen()});
+</script>
+</body>
+</html>

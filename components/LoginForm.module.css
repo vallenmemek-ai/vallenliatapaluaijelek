@@ -1,0 +1,7 @@
+.wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(1200px 600px at 50% -10%,rgba(255,45,135,.07),transparent 60%),var(--bg)}
+.card{width:380px;max-width:calc(100vw - 40px);background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.h1{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-bottom:6px}
+.hint{color:var(--muted);font-size:13px;margin-bottom:24px}
+.foot{margin-top:22px;text-align:center;font-size:11px;color:var(--faint)}

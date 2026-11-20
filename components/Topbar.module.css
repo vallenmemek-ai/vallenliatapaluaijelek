@@ -1,0 +1,4 @@
+.topbar{height:60px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex:none}
+.crumb{font-size:13px;color:var(--muted)}
+.crumb b{color:var(--ink);font-weight:600}
+.right{display:flex;align-items:center;gap:14px}
