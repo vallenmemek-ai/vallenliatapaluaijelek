@@ -31,6 +31,10 @@ export default function Dashboard() {
     await fetch(`/api/admin/keys/${id}`, { method: 'DELETE' });
     showToast('Key di-revoke'); load();
   }
+  async function reset(id) {
+    await fetch(`/api/admin/keys/${id}/reset`, { method: 'POST' });
+    showToast('Device di-reset (unbind)'); load();
+  }
 
   async function generate() {
     setBusy(true);
@@ -88,7 +92,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <KeysTable keys={list} onRevoke={revoke} onCopy={copy} />
+      <KeysTable keys={list} onRevoke={revoke} onCopy={copy} onReset={reset} />
       <Toast msg={toast} />
     </div>
   );
