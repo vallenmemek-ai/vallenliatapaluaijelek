@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { findByHash, bindDevice, touchSeen, addActivity } from '@/lib/store';
 import { hashKey } from '@/lib/keys';
+
+// HMAC secret — harus sama dengan K1^K2 di client (src/protect/guard.hpp).
+// Override lewat env VALLEN_HMAC_SECRET kalau mau rotate.
+const HMAC_SECRET = Buffer.from(
+  process.env.VALLEN_HMAC_SECRET ||
+  'f439fc4cfb6f86ea5175878aaf5876c7d2730baedd8c214007a47ca649f7869f',
+  'hex'
+);
+
+// payload tanda tangan: key|device|expires|ok  (harus identik dengan client)
+function sign(key, device_id, expires_at) {
+  const payload = `${key}|${device_id}|${expires_at}|1`;
+  return crypto.createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');
+}
 
 // rate-limit sederhana per IP (in-memory)
 const hits = new Map();
@@ -36,5 +51,10 @@ export async function POST(req) {
   else await touchSeen(k.id);
   await addActivity({ key_id: k.id, action: 'validate', device_id, ip });
 
-  return NextResponse.json({ ok: true, expires_at: Number(k.exp), label: k.label });
+  return NextResponse.json({
+    ok: true,
+    expires_at: Number(k.exp),
+    label: k.label,
+    sig: sign(key, device_id, Number(k.exp)),
+  });
 }
