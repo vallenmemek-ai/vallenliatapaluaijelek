@@ -16,9 +16,12 @@ export async function POST(req) {
   const customKey = (body || {}).customKey || '';
   let days = parseInt((body || {}).days, 10);
   if (![1, 7, 30].includes(days)) days = 7;
+  let maxDevice = parseInt((body || {}).maxDevice, 10);
+  if (!Number.isFinite(maxDevice) || maxDevice < 1) maxDevice = 1;
+  if (maxDevice > 999) maxDevice = 999;
   try {
-    const row = await createKey({ label, days, key: customKey || undefined });
-    return NextResponse.json({ ok: true, key: row.key, id: row.id, exp: Number(row.exp) });
+    const row = await createKey({ label, days, key: customKey || undefined, maxDevice });
+    return NextResponse.json({ ok: true, key: row.key, id: row.id, exp: Number(row.exp), max_device: maxDevice });
   } catch (e) {
     const reason = e.message === 'duplicate_key' ? 'duplicate_key' : 'invalid_key';
     return NextResponse.json({ ok: false, reason }, { status: 400 });

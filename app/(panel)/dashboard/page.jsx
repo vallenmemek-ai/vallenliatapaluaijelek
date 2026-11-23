@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
   const [dur, setDur] = useState(7);
+  const [maxDev, setMaxDev] = useState(1);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState('');
@@ -40,7 +41,7 @@ export default function Dashboard() {
     setBusy(true);
     const res = await fetch('/api/admin/keys', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label: name || 'Key baru', days: dur, customKey: name }),
+      body: JSON.stringify({ label: name || 'Key baru', days: dur, customKey: name, maxDevice: maxDev }),
     });
     const data = await res.json();
     setBusy(false);
@@ -67,6 +68,9 @@ export default function Dashboard() {
             <option value={7}>7 hari</option>
             <option value={30}>30 hari</option>
           </select>
+          <input className={s.durSelect} type="number" min="1" max="999" value={maxDev}
+            onChange={e => setMaxDev(Math.max(1, Math.min(999, +e.target.value || 1)))}
+            title="Maksimal device" style={{ width: 92 }} />
           <button className="btn btn-pink" onClick={generate} disabled={busy}>{busy ? '…' : '+ Generate'}</button>
         </div>
       </div>

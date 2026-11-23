@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { findByHash, bindDevice, touchSeen, addActivity } from '@/lib/store';
+import { findByHash, registerDevice, touchSeen, addActivity } from '@/lib/store';
 import { hashKey } from '@/lib/keys';
 
 // HMAC secret — harus sama dengan K1^K2 di client (src/protect/guard.hpp).
@@ -43,18 +43,24 @@ export async function POST(req) {
   }
   if (k.status === 'revoked') return NextResponse.json({ ok: false, reason: 'revoked' });
   if (Number(k.exp) < Date.now()) return NextResponse.json({ ok: false, reason: 'expired' });
-  if (k.device_id && k.device_id !== device_id) {
-    await addActivity({ key_id: k.id, action: 'device_mismatch', device_id, ip });
-    return NextResponse.json({ ok: false, reason: 'device_mismatch' });
+
+  // multi-device: daftar kalau masih ada slot (max_device)
+  const reg = await registerDevice(k.id, device_id, k.max_device || 1);
+  if (!reg.ok) {
+    await addActivity({ key_id: k.id, action: 'device_limit', device_id, ip });
+    return NextResponse.json({
+      ok: false, reason: 'device_limit',
+      devices: reg.count, max_device: reg.max,
+    });
   }
-  if (!k.device_id) await bindDevice(k.id, device_id);
-  else await touchSeen(k.id);
+  await touchSeen(k.id);
   await addActivity({ key_id: k.id, action: 'validate', device_id, ip });
 
   return NextResponse.json({
     ok: true,
     expires_at: Number(k.exp),
     label: k.label,
+    max_device: Number(k.max_device || 1),
     sig: sign(key, device_id, Number(k.exp)),
   });
 }

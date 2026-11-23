@@ -16,7 +16,12 @@ export default function KeysTable({ keys, onRevoke, onCopy, onReset }) {
             <tr key={k.id}>
               <td><span className="key">{k.key}</span></td>
               <td><span className="lbl">{k.label}</span></td>
-              <td><span className="dev">{k.device_id || '—'}</span></td>
+              <td><span className="dev">
+                {k.device_id ? (k.device_id.length > 14 ? k.device_id.slice(0, 14) + '…' : k.device_id) : '—'}
+                <span style={{ opacity: .55, marginLeft: 6 }}>
+                  {(k.device_count ?? (k.devices ? k.devices.length : 0))}/{k.max_device ?? 1}
+                </span>
+              </span></td>
               <td className="nowrap">{k.days} hari</td>
               <td className="nowrap">{fmtDate(k.exp)}</td>
               <td><Badge status={k.status} /></td>
